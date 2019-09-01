@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "630798323506",
+    "firebase_url": "https://project-london-corner.firebaseio.com",
+    "project_id": "project-london-corner",
+    "storage_bucket": "project-london-corner.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:630798323506:android:6a5ad185e775508a",
+        "android_client_info": {
+          "package_name": "io.project.london.project_london_corner"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "630798323506-uboe8ernf4jh15rtqdrm5mct8bchkft6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.project.london.project_london_corner",
+            "certificate_hash": "687219f2802eb865a3be4db688d81f49aca8d327"
+          }
+        },
+        {
+          "client_id": "630798323506-ja6qq54p6jk5lo23m8jabg9a36jl4t6d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBfKCKshIBOj3IXhOs-zi83Uydg5YdPLZg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "630798323506-ja6qq54p6jk5lo23m8jabg9a36jl4t6d.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
