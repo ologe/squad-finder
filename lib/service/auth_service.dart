@@ -3,9 +3,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:rxdart/rxdart.dart';
 
-import 'main.dart';
+import '../main.dart';
 
-final authService = AuthService();
+AuthService _authService;
+
+AuthService get authService {
+  if (_authService == null) {
+    _authService = AuthService();
+  }
+  return _authService;
+}
 
 class AuthService {
   final _google = GoogleSignIn();
@@ -56,7 +63,7 @@ class AuthService {
     }, merge: true);
   }
 
-  void signOut() {
+  void logOut() {
     _auth.signOut();
   }
 }

@@ -1,5 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="io.project.london.project_london_corner">
+
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <!-- io.flutter.app.FlutterApplication is an android.app.Application that
          calls FlutterMain.startInitialization(this); in its onCreate method.
@@ -9,7 +12,9 @@
     <application
         android:name="io.flutter.app.FlutterApplication"
         android:label="project_london_corner"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        tools:ignore="GoogleAppIndexingWarning">
+
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
@@ -29,5 +34,9 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <meta-data android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyA1r90dhNCbALoJJ2Bag-o3Rp_oFhfOOxU"/>
+
     </application>
 </manifest>
