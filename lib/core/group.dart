@@ -1,10 +1,11 @@
 import 'package:flutter/cupertino.dart';
+import 'package:project_london_corner/core/member.dart';
 
 class Group {
   final String uid;
   final String name;
   final String adminId;
-  final List<String> members;
+  final List<Member> members;
 
   Group(
       {@required this.uid,
@@ -17,8 +18,11 @@ class Group {
   }
 
   factory Group.fromJson(Map<String, dynamic> json) {
-    final members =
-        (json['members'] as List<dynamic>).map((m) => m.toString()).toList();
+    final members = (json['members'] as List<dynamic>)
+        .map((item) => item as Map<dynamic, dynamic>)
+        .map((e) { return e.map((k, v) => MapEntry(k.toString(), v)); })
+        .map((map) => Member.fromJson(map))
+        .toList();
 
     return Group(
         uid: json['uid'] as String,
@@ -26,4 +30,11 @@ class Group {
         adminId: json['adminId'] as String,
         members: members);
   }
+
+  @override
+  String toString() {
+    return 'Group{uid: $uid, name: $name, adminId: $adminId, members: $members}';
+  }
+
+
 }

@@ -1,8 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:project_london_corner/service/auth_service.dart';
+import 'package:inject/inject.dart';
+import 'package:project_london_corner/presentation/login/login_controller.dart';
 
 class LoginPage extends StatelessWidget {
+  final LoginPageController _controller;
+
+  @provide
+  LoginPage(this._controller);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,6 +29,6 @@ class LoginPage extends StatelessWidget {
   }
 
   void _login() {
-    authService.googleSignIn();
+    _controller.login();
   }
 }

@@ -1,26 +1,21 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:inject/inject.dart';
+import 'package:project_london_corner/core/gateways/group_service.dart';
 import 'package:project_london_corner/core/group.dart';
 import 'package:project_london_corner/core/user.dart';
 import 'package:project_london_corner/main.dart';
 import 'package:rxdart/rxdart.dart';
 
-GroupsService _groupsService;
+class GroupsServiceImpl implements GroupsService {
+  final Firestore _db;
 
-GroupsService get groupsService {
-  if (_groupsService == null) {
-    _groupsService = GroupsService();
-  }
-  return _groupsService;
-}
+  @provide
+  GroupsServiceImpl(this._db);
 
-class GroupsService {
-  final _db = Firestore.instance;
-
+  @override
   Observable<List<Group>> observeUserGroups(String userId) {
-    final memberStream = _db
-        .collection("group")
-        .where("members", arrayContains: userId)
-        .snapshots();
+    final memberStream = _db.collection("group").where("members",
+        arrayContains: {"uid": userId, "pending": true}).snapshots();
 
     return Observable(memberStream).map((snapshot) {
       try {
@@ -32,12 +27,15 @@ class GroupsService {
     });
   }
 
+  @override
   Observable<List<User>> observeMemberPosition(Group group) {
     final membersStream = <Stream<QuerySnapshot>>[];
 
     for (final member in group.members) {
-      final stream =
-          _db.collection("users").where("uid", isEqualTo: member).snapshots();
+      final stream = _db
+          .collection("users")
+          .where("uid", isEqualTo: member.uid)
+          .snapshots();
       membersStream.add(stream);
     }
 
@@ -48,15 +46,6 @@ class GroupsService {
         result.add(user);
       }
       return result;
-    });
-  }
-
-  Observable<User> observeCurrentUser(String uid) {
-    final stream =
-        _db.collection("users").where("uid", isEqualTo: uid).snapshots();
-
-    return Observable(stream).map((snapshot) {
-      return User.fromJson(snapshot.documents.first.data);
     });
   }
 }

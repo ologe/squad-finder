@@ -1,20 +1,28 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:inject/inject.dart';
 import 'package:project_london_corner/core/group.dart';
 import 'package:project_london_corner/core/user.dart';
 import 'package:project_london_corner/presentation/base/base_widgets.dart';
+import 'package:project_london_corner/presentation/detail_group/detail_group_controller.dart';
 import 'package:project_london_corner/presentation/widget/custom_future_builder.dart';
 import 'package:project_london_corner/presentation/widget/custom_stream_builder.dart';
 import 'package:project_london_corner/service/groups_service.dart';
-import 'package:project_london_corner/service/location_service.dart';
 
+// ignore: must_be_immutable
 class DetailGroupPage extends StatefulWidget {
-  final FirebaseUser _user;
-  final Group _group;
+  User _user;
+  Group _group;
+  final DetailGroupPageController _controller;
 
-  DetailGroupPage(this._user, this._group);
+  @provide
+  DetailGroupPage(this._controller);
+
+  void inject(User user, Group group) {
+    this._user = user;
+    this._group = group;
+  }
 
   @override
   _DetailGroupPageState createState() => _DetailGroupPageState();
@@ -30,13 +38,10 @@ class _DetailGroupPageState extends AbsState<DetailGroupPage> {
   void initState() {
     super.initState();
 
-    final locationDisposable = locationService
-        .observeLocation()
-        .switchMap((position) =>
-            locationService.updateUserPosition(widget._user.uid, position))
-        .listen((_) {});
+    final locationDisposable =
+        widget._controller.observeLocation(widget._user).listen((_) {});
 
-    final membersPositionDisposable = groupsService
+    final membersPositionDisposable = widget._controller
         .observeMemberPosition(widget._group)
         .listen((users) => setState(() {
               _markers.clear();
@@ -61,8 +66,8 @@ class _DetailGroupPageState extends AbsState<DetailGroupPage> {
   }
 
   Widget _locationPermissionRequest() {
-    return CustomFutureBuilder<bool>(
-      future: locationService.requestPermission(),
+    return CustomStreamBuilder<bool>(
+      stream: widget._controller.requestPermission(),
       builder: (context, hasPermission) {
         if (hasPermission) {
           return _body();
@@ -74,7 +79,7 @@ class _DetailGroupPageState extends AbsState<DetailGroupPage> {
 
   Widget _body() {
     return CustomStreamBuilder<User>(
-      stream: groupsService.observeCurrentUser(widget._user.uid).take(1),
+      stream: widget._controller.observeCurrentUser().take(1),
       builder: (context, user) {
         return Container(
           child: GoogleMap(
@@ -119,9 +124,7 @@ class _DetailGroupPageState extends AbsState<DetailGroupPage> {
   }
 
   Future<Marker> _newMarker(User me, User other) async {
-    final distance =
-        (await locationService.distanceBetween(me.position, other.position))
-            .toInt();
+    final distance = (await widget._controller.distanceBetweenLatLng(me.position, other.position)).toInt();
     final accuracy = other.lastPosition.accuracy.toInt();
     return Marker(
       markerId: MarkerId(other.uid),

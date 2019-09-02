@@ -1,53 +1,42 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:inject/inject.dart';
+import 'package:project_london_corner/core/gateways/auth_service.dart';
 import 'package:project_london_corner/core/user.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:rxdart/rxdart.dart' as prefix0;
 
 import '../main.dart';
 
-AuthService _authService;
+class AuthServiceImpl implements AuthService {
+  final GoogleSignIn _google;
+  final FirebaseAuth _auth;
+  final Firestore _db;
 
-AuthService get authService {
-  if (_authService == null) {
-    _authService = AuthService();
+  @provide
+  AuthServiceImpl(this._google, this._auth, this._db){
+    _auth.onAuthStateChanged.listen(_userPublisher.add);
   }
-  return _authService;
-}
 
-class AuthService {
-  final _google = GoogleSignIn();
-  final _auth = FirebaseAuth.instance;
-  final _db = Firestore.instance;
+  final _userPublisher = BehaviorSubject<FirebaseUser>();
 
-  Observable<FirebaseUser> firebaseUser;
-  prefix0.Observable<User> user;
+  @override
+  Observable<User> observeUser() => _userPublisher.switchMap((user) {
+        if (user == null) {
+          return Observable.just(null);
+        }
+        return _db
+            .collection("users")
+            .document(user.uid)
+            .snapshots()
+            .map((snapshot) => User.fromJson(snapshot.data));
+      });
 
   Observable<Map<String, dynamic>> profile;
 
-  final _loading = PublishSubject<bool>();
-
-  Observable<bool> isLoading() => _loading;
-
-  AuthService() {
-    // ignore: close_sinks
-    final authEventsPublisher = BehaviorSubject<FirebaseUser>();
-    authEventsPublisher.addStream(_auth.onAuthStateChanged);
-    firebaseUser = authEventsPublisher;
-    user = firebaseUser.switchMap((f) {
-      if (f == null){
-        return null;
-      }
-      return _db.collection("users").document(f.uid).snapshots()
-          .map((snapshot) => User.fromJson(snapshot.data));
-    });
-  }
-
+  @override
   Future<void> googleSignIn() async {
     try {
-      _loading.add(true);
-
       final googleUser = await _google.signIn();
       final googleAuth = await googleUser.authentication;
 
@@ -58,8 +47,6 @@ class AuthService {
       _updateUser(authResult.user);
     } catch (e) {
       logger.w(e);
-    } finally {
-      _loading.add(false);
     }
   }
 
@@ -73,7 +60,8 @@ class AuthService {
     }, merge: true);
   }
 
-  void logOut() {
-    _auth.signOut();
+  @override
+  Future<void> logOut() async {
+    await _auth.signOut();
   }
 }
