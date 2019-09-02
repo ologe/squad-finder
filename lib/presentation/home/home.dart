@@ -6,6 +6,7 @@ import 'package:project_london_corner/di/injection_utils.dart';
 import 'package:project_london_corner/presentation/create_group/create_group.dart';
 import 'package:project_london_corner/presentation/detail_group/detail_group.dart';
 import 'package:project_london_corner/presentation/home/home_controller.dart';
+import 'package:project_london_corner/presentation/list_item.dart';
 import 'package:project_london_corner/presentation/widget/custom_stream_builder.dart';
 
 // ignore: must_be_immutable
@@ -18,7 +19,7 @@ class HomePage extends StatefulWidget {
   @provide
   HomePage(this._controller, this._detailPage, this._createGroup);
 
-  HomePage inject(User user){
+  HomePage inject(User user) {
     this._user = user;
     return this;
   }
@@ -28,7 +29,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,58 +68,68 @@ class _HomePageState extends State<HomePage> {
           if (originalGroups.isEmpty) {
             return Text("No groups found");
           }
+          final pendingGroups = <ListItem>[];
 
-          final pendingGroups = <Group>[];
-          final otherGroups = <Group>[];
+          final otherGroups = <ListItem>[];
 
           for (final group in originalGroups) {
             if (group.members
                 .any((m) => m.uid == widget._user.uid && m.pending)) {
-              pendingGroups.add(group);
+              pendingGroups.add(ActualItem<Group>(group));
             } else {
-              otherGroups.add(group);
+              otherGroups.add(ActualItem<Group>(group));
             }
           }
-          var headerCount = 0;
-          headerCount = pendingGroups.isEmpty ? headerCount : (headerCount + 1);
-          headerCount = otherGroups.isEmpty ? headerCount : (headerCount + 1);
+          if (pendingGroups.isNotEmpty){
+            pendingGroups.insert(0, HeadingItem("Pending groups"));
+          }
+          if (otherGroups.isNotEmpty){
+            otherGroups.insert(0, HeadingItem("My groups"));
+          }
 
           final groups = pendingGroups + otherGroups;
 
           return ListView.builder(
-              itemCount: groups.length + headerCount,
+              itemCount: groups.length,
               itemBuilder: (context, index) {
-                if (pendingGroups.isNotEmpty && index == 0) {
-                  return Text("Pending groups");
-                }
                 if (otherGroups.isNotEmpty &&
-                    index == pendingGroups.length + 1) {
-                  return Text("My groups");
+                    index == pendingGroups.length + 1) {}
+
+                final item = groups[index];
+                if (item is HeadingItem) {
+                  return _buildHeader(item);
+                } else if (item is ActualItem<Group>) {
+                  return _buildTile(item.item);
                 }
-
-                final item = groups[index - headerCount];
-
-                final needApproval = item.members.any((member) {
-                  return member.uid == widget._user.uid && member.pending;
-                });
-
-                return ListTile(
-                  leading: CircleAvatar(
-                    child: Icon(Icons.group),
-                  ),
-                  title: Text(item.name),
-                  subtitle: Text("${item.membersCount} members"),
-                  trailing: needApproval
-                      ? IconButton(
-                    onPressed: () {},
-                    icon: Icon(Icons.done),
-                  )
-                      : null,
-                  onTap: () => _toDetail(item),
-                );
+                return Text("Error ${item.runtimeType}");
               });
         },
       ),
+    );
+  }
+
+  Widget _buildHeader(HeadingItem item) {
+    return Text(item.title);
+  }
+
+  Widget _buildTile(Group group) {
+    final needApproval = group.members.any((member) {
+      return member.uid == widget._user.uid && member.pending;
+    });
+
+    return ListTile(
+      leading: CircleAvatar(
+        child: Icon(Icons.group),
+      ),
+      title: Text(group.name),
+      subtitle: Text("${group.membersCount} members"),
+      trailing: needApproval
+          ? IconButton(
+              onPressed: () => _approveGroup(group),
+              icon: Icon(Icons.done),
+            )
+          : null,
+      onTap: () => _toDetail(group),
     );
   }
 
@@ -127,14 +137,11 @@ class _HomePageState extends State<HomePage> {
     return Padding(
         padding: const EdgeInsets.all(8.0),
         child: RaisedButton(
-          onPressed: () =>
-              _toggleSharePosition(widget._user)
-          ,
+          onPressed: () => _toggleSharePosition(widget._user),
           child: Text(widget._user.allowShareLocation
               ? "Stop sharing position"
               : "Share position"),
-        )
-    );
+        ));
   }
 
   Widget _logoutButton() {
@@ -148,7 +155,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _toCreateGroup() {
-    final page = widget._createGroup();
+    final page = widget._createGroup().inject(widget._user);
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
   }
 
@@ -165,4 +172,9 @@ class _HomePageState extends State<HomePage> {
     detailPage.inject(widget._user, group);
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => detailPage));
   }
+
+  void _approveGroup(Group group){
+    widget._controller.approveGroup(widget._user, group);
+  }
+
 }

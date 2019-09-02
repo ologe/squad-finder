@@ -24,7 +24,6 @@ class CustomStreamBuilder<T> extends StatelessWidget {
         }
         if (snapshot.hasError) {
           logger.e(snapshot.error);
-          return new Text('Error: ${snapshot.error}');
         }
         return builder(context, snapshot.data);
       },

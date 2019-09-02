@@ -26,4 +26,8 @@ class HomePageController {
   Observable<List<Group>> observeUserGroups(User user) {
     return _groupsService.observeUserGroups(user.uid);
   }
+
+  Future<void> approveGroup(User user, Group group) async{
+    await _groupsService.approveGroup(user, group);
+  }
 }

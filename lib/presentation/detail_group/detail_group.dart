@@ -82,7 +82,7 @@ class _DetailGroupPageState extends AbsState<DetailGroupPage> {
         return Container(
           child: GoogleMap(
             initialCameraPosition:
-                CameraPosition(target: user.position, zoom: 100),
+                CameraPosition(target: user.position, zoom: 14),
             mapType: MapType.normal,
             onMapCreated: _onMapCreated,
             markers: _markers.toSet(),

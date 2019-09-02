@@ -39,7 +39,7 @@ class LocationServiceImpl implements LocationService {
   Observable<CurrentPosition> observeLocation() {
     final options = LocationOptions(
       accuracy: LocationAccuracy.bestForNavigation,
-      distanceFilter: 1,
+      distanceFilter: 50,
       forceAndroidLocationManager: true,
     );
     return Observable(_location.getPositionStream(
