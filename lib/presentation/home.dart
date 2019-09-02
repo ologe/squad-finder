@@ -6,6 +6,9 @@ import 'package:project_london_corner/presentation/group_detail.dart';
 import 'package:project_london_corner/presentation/widget/custom_stream_builder.dart';
 import 'package:project_london_corner/service/auth_service.dart';
 import 'package:project_london_corner/service/groups_service.dart';
+import 'package:project_london_corner/service/location_service.dart';
+
+import '../main.dart';
 
 class HomePage extends StatefulWidget {
   final FirebaseUser user;
@@ -76,9 +79,27 @@ class _HomePageState extends State<HomePage> {
   Widget _sharePositionButton(){
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: RaisedButton(
-        onPressed: _logout,
-        child: Text("Share position"),
+      child: StreamBuilder<User>(
+        stream: authService.user,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting &&
+              !snapshot.hasData &&
+              !snapshot.hasError) {
+            return Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            logger.e(snapshot.error);
+            return new Text('Error: ${snapshot.error}');
+          }
+          if (snapshot.data == null){
+            return Container();
+          }
+          final user = snapshot.requireData;
+          return RaisedButton(
+            onPressed: () => _toggleSharePosition(user),
+            child: Text(user.allowShareLocation ? "Stop sharing position" : "Share position"),
+          );
+        }
       ),
     );
   }
@@ -94,6 +115,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _toCreateGroup() {}
+
+  Future<void> _toggleSharePosition(User user) async {
+    await locationService.toggleSharePosition(user.uid);
+  }
 
   void _logout() {
     authService.logOut();

@@ -1,10 +1,16 @@
+import 'package:flutter/cupertino.dart';
+
 class Group {
   final String uid;
   final String name;
   final String adminId;
   final List<String> members;
 
-  Group(this.uid, this.name, this.adminId, this.members);
+  Group(
+      {@required this.uid,
+      @required this.name,
+      @required this.adminId,
+      @required this.members});
 
   int get membersCount {
     return members.length;
@@ -14,7 +20,10 @@ class Group {
     final members =
         (json['members'] as List<dynamic>).map((m) => m.toString()).toList();
 
-    return Group(json['uid'] as String, json['name'] as String,
-        json['adminId'] as String, members);
+    return Group(
+        uid: json['uid'] as String,
+        name: json['name'] as String,
+        adminId: json['adminId'] as String,
+        members: members);
   }
 }

@@ -9,7 +9,7 @@ class SplashPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomStreamBuilder<FirebaseUser>(
-      stream: authService.user,
+      stream: authService.firebaseUser,
       builder: (context, user) {
         if (user == null) {
           return LoginPage();

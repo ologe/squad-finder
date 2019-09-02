@@ -7,11 +7,12 @@ final logger = Logger(printer: PrettyPrinter());
 void main() => runApp(App());
 
 class App extends StatelessWidget {
-  // This widget is the root of your application.
+
   @override
   Widget build(BuildContext context) {
+
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Project London Corner',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,

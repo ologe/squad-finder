@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:project_london_corner/core/user.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:rxdart/rxdart.dart' as prefix0;
 
 import '../main.dart';
 
@@ -19,7 +21,8 @@ class AuthService {
   final _auth = FirebaseAuth.instance;
   final _db = Firestore.instance;
 
-  Observable<FirebaseUser> user;
+  Observable<FirebaseUser> firebaseUser;
+  prefix0.Observable<User> user;
 
   Observable<Map<String, dynamic>> profile;
 
@@ -31,7 +34,14 @@ class AuthService {
     // ignore: close_sinks
     final authEventsPublisher = BehaviorSubject<FirebaseUser>();
     authEventsPublisher.addStream(_auth.onAuthStateChanged);
-    user = authEventsPublisher;
+    firebaseUser = authEventsPublisher;
+    user = firebaseUser.switchMap((f) {
+      if (f == null){
+        return null;
+      }
+      return _db.collection("users").document(f.uid).snapshots()
+          .map((snapshot) => User.fromJson(snapshot.data));
+    });
   }
 
   Future<void> googleSignIn() async {

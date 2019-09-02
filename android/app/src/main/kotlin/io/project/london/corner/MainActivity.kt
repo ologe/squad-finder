@@ -1,4 +1,4 @@
-package io.project.london.project_london_corner
+package io.project.london.corner
 
 import android.os.Bundle
 

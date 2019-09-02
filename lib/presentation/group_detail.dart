@@ -2,13 +2,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location/location.dart';
 import 'package:project_london_corner/core/group.dart';
 import 'package:project_london_corner/core/user.dart';
 import 'package:project_london_corner/presentation/base/base_widgets.dart';
 import 'package:project_london_corner/presentation/widget/custom_future_builder.dart';
 import 'package:project_london_corner/presentation/widget/custom_stream_builder.dart';
 import 'package:project_london_corner/service/groups_service.dart';
+import 'package:project_london_corner/service/location_service.dart';
 
 class DetailGroupPage extends StatefulWidget {
   final FirebaseUser _user;
@@ -22,19 +22,30 @@ class DetailGroupPage extends StatefulWidget {
 
 class _DetailGroupPageState extends AbsState<DetailGroupPage> {
   final _markers = <Marker>[];
+  final _circles = <Circle>[];
 
-  final _location = Location();
   GoogleMapController _mapController;
 
   @override
   void initState() {
     super.initState();
-    final stream = groupsService.observeMemberPosition(widget._group)
-    .listen((users) => setState(() {
-      _markers.clear();
-      _markers.addAll(_buildMarkers(users));
-    }));
-    subscriptions.add(stream);
+
+    final locationDisposable = locationService
+        .observeLocation()
+        .switchMap((position) =>
+            locationService.updateUserPosition(widget._user.uid, position))
+        .listen((_) {});
+
+    final membersPositionDisposable = groupsService
+        .observeMemberPosition(widget._group)
+        .listen((users) => setState(() {
+              _markers.clear();
+              _circles.clear();
+              _buildCurrentPosition(users);
+            }));
+
+    subscriptions.add(locationDisposable);
+    subscriptions.add(membersPositionDisposable);
   }
 
   @override
@@ -49,25 +60,16 @@ class _DetailGroupPageState extends AbsState<DetailGroupPage> {
     );
   }
 
-  Widget _locationPermissionRequest(){
+  Widget _locationPermissionRequest() {
     return CustomFutureBuilder<bool>(
-      future: _checkLocationPermission(),
-      builder: (context, hasPermission){
-        if (hasPermission){
+      future: locationService.requestPermission(),
+      builder: (context, hasPermission) {
+        if (hasPermission) {
           return _body();
         }
         return Text("Please enable storage permission");
       },
     );
-  }
-
-  Future<bool> _checkLocationPermission() async {
-    final level = LocationPermissionLevel.locationAlways;
-    final result = await _locationPermissions.checkPermissionStatus(level: level);
-    final hasPermission = result == PermissionStatus.granted;
-    return hasPermission || await _locationPermissions.requestPermissions(permissionLevel: level) == PermissionStatus.granted;
-
-//    await _locationPermissions.shouldShowRequestPermissionRationale(permissionLevel: level); TODO
   }
 
   Widget _body() {
@@ -76,42 +78,67 @@ class _DetailGroupPageState extends AbsState<DetailGroupPage> {
       builder: (context, user) {
         return Container(
           child: GoogleMap(
-            initialCameraPosition: CameraPosition(
-              target: user.lastPosition,
-              zoom: 100
-            ),
+            initialCameraPosition:
+                CameraPosition(target: user.position, zoom: 100),
             mapType: MapType.normal,
             onMapCreated: _onMapCreated,
             markers: _markers.toSet(),
+            circles: _circles.toSet(),
             indoorViewEnabled: true,
             myLocationButtonEnabled: true,
             myLocationEnabled: true,
+            mapToolbarEnabled: true,
           ),
         );
       },
     );
   }
 
-  void _onMapCreated(GoogleMapController controller){
+  void _onMapCreated(GoogleMapController controller) {
     _mapController = controller;
   }
 
-  List<Marker> _buildMarkers(List<User> users){
+  void _buildCurrentPosition(List<User> users) async {
     final markers = <Marker>[];
+    final circles = <Circle>[];
+
+    final me = users.where((user) => user.uid == widget._user.uid).first;
+
     for (final user in users) {
       if (user.uid == widget._user.uid) {
         continue;
       }
-      final marker = Marker(
-        markerId: MarkerId(user.uid),
-        position: user.lastPosition,
-        infoWindow: InfoWindow(
-          title: user.displayName
-        )
-      );
-      markers.add(marker);
+
+      if (user.allowShareLocation) {
+        markers.add(await _newMarker(me, user));
+        circles.add(await _newCircle(user));
+      }
     }
-    return markers;
+    _markers.addAll(markers);
+    _circles.addAll(circles);
   }
 
+  Future<Marker> _newMarker(User me, User other) async {
+    final distance =
+        (await locationService.distanceBetween(me.position, other.position))
+            .toInt();
+    final accuracy = other.lastPosition.accuracy.toInt();
+    return Marker(
+      markerId: MarkerId(other.uid),
+      position: other.position,
+      infoWindow: InfoWindow(
+          title: other.displayName, snippet: "$distance±${accuracy}m"),
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+    );
+  }
+
+  Future<Circle> _newCircle(User user) async {
+    return Circle(
+        circleId: CircleId(user.uid),
+        center: user.position,
+        radius: user.lastPosition.accuracy,
+        fillColor: Colors.indigoAccent.withAlpha(40),
+        strokeWidth: 2,
+        strokeColor: Colors.indigoAccent);
+  }
 }
