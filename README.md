@@ -1,4 +1,4 @@
-# project_london_corner
+# Squad finder
 
 A new Flutter application.
 
