@@ -70,3 +70,12 @@
 !**/ios/**/default.pbxuser
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
+
+assets/keys.json
+ios/Runner/keys.plist
+
+
+# inject.dart
+**/*.inject.dart
+**/*.inject.summary
+**/*.g.dart
