@@ -50,7 +50,7 @@ I created some simple helpers (bash scripts). Run the script using `./script_nam
     </plist>
     ```
 ### TODO
-- [] Finish
+- [ ] Finish
 - [ ] Add unit tests
 - [ ] Add material/cupertino theming  
 
