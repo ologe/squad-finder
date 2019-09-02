@@ -3,6 +3,7 @@ import 'package:inject/inject.dart';
 import 'package:project_london_corner/core/group.dart';
 import 'package:project_london_corner/core/user.dart';
 import 'package:project_london_corner/di/injection_utils.dart';
+import 'package:project_london_corner/presentation/create_group/create_group.dart';
 import 'package:project_london_corner/presentation/detail_group/detail_group.dart';
 import 'package:project_london_corner/presentation/home/home_controller.dart';
 import 'package:project_london_corner/presentation/widget/custom_stream_builder.dart';
@@ -10,11 +11,12 @@ import 'package:project_london_corner/presentation/widget/custom_stream_builder.
 // ignore: must_be_immutable
 class HomePage extends StatefulWidget {
   final Provider<DetailGroupPage> _detailPage;
+  final Provider<CreateGroupPage> _createGroup;
   final HomePageController _controller;
   User _user;
 
   @provide
-  HomePage(this._controller, this._detailPage);
+  HomePage(this._controller, this._detailPage, this._createGroup);
 
   HomePage inject(User user){
     this._user = user;
@@ -145,7 +147,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _toCreateGroup() {}
+  void _toCreateGroup() {
+    final page = widget._createGroup();
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+  }
 
   void _toggleSharePosition(User user) {
     widget._controller.toggleSharePosition(user);

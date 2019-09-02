@@ -6,9 +6,7 @@ import 'package:project_london_corner/core/group.dart';
 import 'package:project_london_corner/core/user.dart';
 import 'package:project_london_corner/presentation/base/base_widgets.dart';
 import 'package:project_london_corner/presentation/detail_group/detail_group_controller.dart';
-import 'package:project_london_corner/presentation/widget/custom_future_builder.dart';
 import 'package:project_london_corner/presentation/widget/custom_stream_builder.dart';
-import 'package:project_london_corner/service/groups_service.dart';
 
 // ignore: must_be_immutable
 class DetailGroupPage extends StatefulWidget {
