@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:project_london_corner/core/group.dart';
+import 'package:project_london_corner/core/entity/group.dart';
 import 'package:project_london_corner/presentation/base/base_widgets.dart';
 import 'package:project_london_corner/presentation/home/home_controller.dart';
 import 'package:project_london_corner/presentation/widget/custom_stream_builder.dart';
@@ -19,7 +19,7 @@ class MyGroups extends AbsStatelessWidget {
     final currentUser = user(context);
 
     return CustomStreamBuilder<List<Group>>(
-      stream: controller.observeUserGroups(currentUser),
+      stream: controller.observeUserGroups(currentUser.uid),
       builder: (context, originalGroups) {
         if (originalGroups.isEmpty) {
           return Text("No groups found");
@@ -97,7 +97,7 @@ class MyGroups extends AbsStatelessWidget {
   }
 
   void _approveGroup(BuildContext context, Group group) {
-    controller.approveGroup(user(context), group);
+    controller.approveGroup(user(context).uid, group);
   }
 
   void _toDetail(Group group) {

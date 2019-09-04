@@ -1,6 +1,5 @@
 import 'package:inject/inject.dart';
-import 'package:project_london_corner/core/gateways/group_service.dart';
-import 'package:project_london_corner/core/user.dart';
+import 'package:project_london_corner/core/gateway/group_service.dart';
 
 class CreateGroupPageController {
   final GroupsService _groupsService;
@@ -8,7 +7,7 @@ class CreateGroupPageController {
   @provide
   CreateGroupPageController(this._groupsService);
 
-  void createGroup(String name, User user, List<String> members){
-    _groupsService.createGroup(name, user, members);
+  void createGroup(String name, String userId, List<String> members) {
+    _groupsService.createGroup(name, userId, members);
   }
 }

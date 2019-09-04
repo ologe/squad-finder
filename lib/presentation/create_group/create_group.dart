@@ -1,23 +1,17 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:inject/inject.dart';
-import 'package:project_london_corner/core/user.dart';
 import 'package:project_london_corner/presentation/base/base_widgets.dart';
+import 'package:project_london_corner/presentation/user_state.dart';
 
 import 'create_group_controller.dart';
 
 // ignore: must_be_immutable
 class CreateGroupPage extends StatefulWidget {
-  User _user;
   final CreateGroupPageController _controller;
 
   @provide
   CreateGroupPage(this._controller);
-
-  CreateGroupPage inject(User user) {
-    this._user = user;
-    return this;
-  }
 
   @override
   _CreateGroupPageState createState() => _CreateGroupPageState();
@@ -167,7 +161,7 @@ class _CreateGroupPageState extends AbsState<CreateGroupPage> {
                   if (formState.validate()) {
                     formState.save();
                     widget._controller
-                        .createGroup(_groupName, widget._user, members);
+                        .createGroup(_groupName, UserState.of(context).user.uid, members);
                     Navigator.of(context).pop();
                   }
                 },

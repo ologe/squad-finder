@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:inject/inject.dart';
-import 'package:project_london_corner/core/gateways/group_service.dart';
-import 'package:project_london_corner/core/group.dart';
-import 'package:project_london_corner/core/user.dart';
+import 'package:project_london_corner/core/entity/group.dart';
+import 'package:project_london_corner/core/entity/user.dart';
+import 'package:project_london_corner/core/gateway/group_service.dart';
 import 'package:project_london_corner/main.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -42,7 +42,7 @@ class GroupsServiceImpl implements GroupsService {
     final membersStream = <Stream<QuerySnapshot>>[];
 
     for (final member in group.members) {
-      if (member.pending){
+      if (member.pending) {
         continue;
       }
       final stream = _db
@@ -63,9 +63,9 @@ class GroupsServiceImpl implements GroupsService {
   }
 
   @override
-  Future<void> createGroup(String name, User user, List<String> members) async {
+  Future<void> createGroup(String name, String userId, List<String> members) async {
     final usersUid = <String>[];
-    usersUid.add(user.uid);
+    usersUid.add(userId);
     for (var value in members) {
       final userQuery = await _db
           .collection("users")
@@ -84,19 +84,22 @@ class GroupsServiceImpl implements GroupsService {
     final ref = _db.collection("group").document();
     await ref.setData({
       "uid": ref.documentID,
-      "adminId": user.uid,
+      "adminId": userId,
       "name": name,
       "members": usersUid
-          .map((uid) => {"uid": uid, "pending": user.uid != uid})
+          .map((uid) => {"uid": uid, "pending": userId != uid})
           .toList()
     });
   }
 
   @override
-  Future<void> approveGroup(User user, Group group) async {
+  Future<void> approveGroup(String userId, Group group) async {
     final ref = _db.collection("group").document(group.uid);
     final members = group.members.map((member) {
-      return {"uid": member.uid, "pending": false};
+      return {
+        "uid": member.uid,
+        "pending": member.pending || member.uid == userId
+      };
     }).toList();
     await ref.setData({"members": members}, merge: true);
   }

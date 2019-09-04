@@ -1,114 +1,57 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:inject/inject.dart';
-import 'package:project_london_corner/core/group.dart';
-import 'package:project_london_corner/core/user.dart';
+import 'package:project_london_corner/core/entity/user.dart';
 import 'package:project_london_corner/presentation/base/base_widgets.dart';
-import 'package:project_london_corner/presentation/map/map_controller.dart';
-import 'package:rxdart/rxdart.dart';
+import 'package:project_london_corner/presentation/map/map_page_controller.dart';
 
-// ignore: must_be_immutable
-class MapPage extends StatefulWidget {
-  double _backdropPeek;
-  final MapController _controller;
+class MapWidget extends StatefulWidget {
+  final MapController controller;
 
-  @provide
-  MapPage(this._controller) : super(key: GlobalKey<MapPageState>());
-
-  Key inject(double backdropPeek) {
-    this._backdropPeek = backdropPeek;
-    return key;
-  }
+  MapWidget({
+    Key key,
+    @required this.controller,
+  }) : super(key: key);
 
   @override
-  State createState() => MapPageState();
+  MapWidgetState createState() => MapWidgetState();
 }
 
-class MapPageState extends AbsState<MapPage> {
+class MapWidgetState extends AbsState<MapWidget> {
   GoogleMapController _mapController;
-
-  final _groupPublisher = BehaviorSubject<Group>();
 
   final _markers = <Marker>[];
   final _circles = <Circle>[];
 
   @override
-  void initState() {
-    super.initState();
-    final memberPositionDisposable = _groupPublisher
-        .switchMap((group) => widget._controller.observeMemberPosition(group))
-        .listen(_buildCurrentPosition);
-
-    final myPositionDisposable = Observable.timer(1, Duration(seconds: 2))
-        .switchMap((_) => widget._controller.observeLocation(user))
-        .listen((_) {});
-
-    subscriptions.add(memberPositionDisposable);
-    subscriptions.add(myPositionDisposable);
-  }
-
-  void updateGroup(Group group) {
-    _groupPublisher.add(group);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: <Widget>[
-        GestureDetector(
-          child: GoogleMap(
-            onMapCreated: (controller) {
-              _mapController = controller;
-              _setMapStyle(controller);
-            },
-            myLocationEnabled: true,
-            myLocationButtonEnabled: false,
-            initialCameraPosition: CameraPosition(target: LatLng(0, 0)),
-            markers: _markers.toSet(),
-            circles: _circles.toSet(),
-            indoorViewEnabled: true,
-          ),
-        ),
-        _additional(context)
-      ],
+    return GoogleMap(
+      onMapCreated: (controller) {
+        _mapController = controller;
+        _setMapStyle(controller);
+      },
+      myLocationEnabled: true,
+      myLocationButtonEnabled: false,
+      initialCameraPosition: CameraPosition(target: LatLng(0, 0)),
+      markers: _markers.toSet(),
+      circles: _circles.toSet(),
+      indoorViewEnabled: true,
     );
   }
 
-  Widget _additional(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.only(bottom: widget._backdropPeek),
-        child: Column(
-          children: <Widget>[
-            Expanded(child: Container()),
-            Row(
-              children: <Widget>[
-                Expanded(child: Container()),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: FloatingActionButton(
-                    backgroundColor: Colors.white,
-                    child: Icon(
-                      Icons.my_location,
-                      color: Theme.of(context).accentColor,
-                    ),
-                    onPressed: _moveToCurrentPosition,
-                  ),
-                )
-              ],
-            )
-          ],
-        ),
-      ),
-    );
+  Future<void> _setMapStyle(GoogleMapController controller) async {
+    final style = await rootBundle.loadString("assets/map_style.json");
+    await controller.setMapStyle(style);
   }
 
-  void _buildCurrentPosition(List<User> users) async {
-    print("user $users");
+  void moveToCurrentPosition() {
+    widget.controller.observeCurrentPosition().take(1).listen((position) {
+      _mapController.animateCamera(
+          CameraUpdate.newLatLngZoom(LatLng(position.lat, position.long), 15));
+    });
+  }
 
+  void buildCurrentPosition(List<User> users) async {
     final markers = <Marker>[];
     final circles = <Circle>[];
 
@@ -124,7 +67,6 @@ class MapPageState extends AbsState<MapPage> {
         circles.add(await _newCircle(user));
       }
     }
-    print("marker $markers");
     setState(() {
       _markers.addAll(markers);
       _circles.addAll(circles);
@@ -132,7 +74,7 @@ class MapPageState extends AbsState<MapPage> {
   }
 
   Future<Marker> _newMarker(User me, User other) async {
-    final distance = (await widget._controller
+    final distance = (await widget.controller
             .distanceBetweenLatLng(me.position, other.position))
         .toInt();
     final accuracy = other.lastPosition.accuracy.toInt();
@@ -153,17 +95,5 @@ class MapPageState extends AbsState<MapPage> {
         fillColor: Colors.indigoAccent.withAlpha(40),
         strokeWidth: 2,
         strokeColor: Colors.indigoAccent);
-  }
-
-  Future<void> _setMapStyle(GoogleMapController controller) async {
-    final style = await rootBundle.loadString("assets/map_style.json");
-    await controller.setMapStyle(style);
-  }
-
-  void _moveToCurrentPosition() {
-    widget._controller.observeCurrentPosition().take(1).listen((position) {
-      _mapController.animateCamera(
-          CameraUpdate.newLatLngZoom(LatLng(position.lat, position.long), 15));
-    });
   }
 }

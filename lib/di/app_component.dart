@@ -1,9 +1,9 @@
 import 'package:inject/inject.dart';
+import 'package:project_london_corner/app/app.dart';
 import 'package:project_london_corner/di/database_module.dart';
 import 'package:project_london_corner/di/location_module.dart';
 import 'package:project_london_corner/di/network_module.dart';
 
-import '../main.dart';
 import 'app_component.inject.dart' as g;
 
 @Injector([LocationModule, NetworkModule, DatabaseModule])

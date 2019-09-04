@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:inject/inject.dart';
-import 'package:project_london_corner/core/group.dart';
+import 'package:project_london_corner/core/entity/group.dart';
 import 'package:project_london_corner/di/injection_utils.dart';
 import 'package:project_london_corner/presentation/base/base_widgets.dart';
 import 'package:project_london_corner/presentation/create_group/create_group.dart';
-import 'package:project_london_corner/presentation/home/groups.dart';
 import 'package:project_london_corner/presentation/home/home_controller.dart';
-import 'package:project_london_corner/presentation/map/map.dart';
+import 'package:project_london_corner/presentation/map/map_page.dart';
 import 'package:project_london_corner/presentation/widget/backdrop/backdrop.dart';
 import 'package:project_london_corner/presentation/widget/location_button.dart';
+
+import 'my_groups_widget.dart';
 
 const double backdropPeek = 56.0;
 
@@ -95,12 +96,11 @@ class _HomePageState extends AbsState<HomePage> {
   }
 
   void _toggleSharePosition() {
-    widget._controller.toggleSharePosition(user);
+    widget._controller.toggleSharePosition(user.uid);
   }
 
   void _toCreateGroup() {
-    final page = widget._createGroup().inject(user);
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => widget._createGroup()));
   }
 
   void _onGroupSelectedCallback(Group group) {

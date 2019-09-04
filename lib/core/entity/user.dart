@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:project_london_corner/core/position.dart';
+import 'package:project_london_corner/core/entity/position.dart';
 
 class User {
   final String uid;

@@ -1,8 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:inject/inject.dart';
-import 'package:project_london_corner/core/user.dart';
 import 'package:project_london_corner/di/injection_utils.dart';
-import 'package:project_london_corner/presentation/home/home.dart';
+import 'package:project_london_corner/presentation/home/home_page.dart';
 import 'package:project_london_corner/presentation/login/login.dart';
 import 'package:project_london_corner/presentation/splash/splash_controller.dart';
 import 'package:project_london_corner/presentation/user_state.dart';
@@ -18,7 +18,7 @@ class SplashPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomStreamBuilder<User>(
+    return CustomStreamBuilder<FirebaseUser>(
       stream: _controller.observeUser(),
       builder: (context, user) {
         return UserState(
@@ -29,7 +29,7 @@ class SplashPage extends StatelessWidget {
     );
   }
 
-  Widget _body(User user) {
+  Widget _body(FirebaseUser user) {
     if (user == null) {
       return _loginPage();
     } else {

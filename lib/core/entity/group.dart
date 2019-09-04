@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
-import 'package:project_london_corner/core/member.dart';
+
+import 'member.dart';
 
 class Group {
   final String uid;

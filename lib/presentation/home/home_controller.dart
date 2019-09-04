@@ -1,9 +1,8 @@
 import 'package:inject/inject.dart';
-import 'package:project_london_corner/core/gateways/auth_service.dart';
-import 'package:project_london_corner/core/gateways/group_service.dart';
-import 'package:project_london_corner/core/gateways/location_service.dart';
-import 'package:project_london_corner/core/group.dart';
-import 'package:project_london_corner/core/user.dart';
+import 'package:project_london_corner/core/entity/group.dart';
+import 'package:project_london_corner/core/gateway/auth_service.dart';
+import 'package:project_london_corner/core/gateway/group_service.dart';
+import 'package:project_london_corner/core/gateway/location_service.dart';
 import 'package:rxdart/rxdart.dart';
 
 class HomePageController {
@@ -19,15 +18,15 @@ class HomePageController {
     _authService.logOut();
   }
 
-  Future<void> toggleSharePosition(User user) async {
-    await _locationService.toggleSharePosition(user.uid);
+  Future<void> toggleSharePosition(String userId) async {
+    await _locationService.toggleSharePosition(userId);
   }
 
-  Observable<List<Group>> observeUserGroups(User user) {
-    return _groupsService.observeUserGroups(user.uid);
+  Observable<List<Group>> observeUserGroups(String userId) {
+    return _groupsService.observeUserGroups(userId);
   }
 
-  Future<void> approveGroup(User user, Group group) async{
-    await _groupsService.approveGroup(user, group);
+  Future<void> approveGroup(String userId, Group group) async {
+    await _groupsService.approveGroup(userId, group);
   }
 }

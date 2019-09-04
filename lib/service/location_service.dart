@@ -3,8 +3,9 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:inject/inject.dart';
 import 'package:location_permissions/location_permissions.dart';
-import 'package:project_london_corner/core/gateways/location_service.dart';
-import 'package:project_london_corner/core/position.dart';
+import 'package:project_london_corner/core/entity/position.dart';
+import 'package:project_london_corner/core/entity/user.dart';
+import 'package:project_london_corner/core/gateway/location_service.dart';
 import 'package:rxdart/rxdart.dart';
 
 class LocationServiceImpl implements LocationService {
@@ -18,7 +19,8 @@ class LocationServiceImpl implements LocationService {
   @override
   Stream<bool> requestPermission() async* {
     final level = LocationPermissionLevel.locationAlways;
-    var hasPermission = await _locationPermission.checkPermissionStatus(level: level) ==
+    var hasPermission =
+        await _locationPermission.checkPermissionStatus(level: level) ==
             PermissionStatus.granted;
     if (!hasPermission) {
       hasPermission = await _locationPermission.requestPermissions(
@@ -42,6 +44,7 @@ class LocationServiceImpl implements LocationService {
       distanceFilter: 50,
       forceAndroidLocationManager: true,
     );
+
     return Observable(_location.getPositionStream(
             options, GeolocationPermission.locationAlways))
         .map((position) => CurrentPosition(
@@ -75,5 +78,17 @@ class LocationServiceImpl implements LocationService {
     await ref.setData(
         {"allowShareLocation": !(snapshot.data['allowShareLocation'] as bool)},
         merge: true);
+  }
+
+  @override
+  Future<String> getUserAddress(User user) async {
+    final position = user.lastPosition;
+    final result =
+        await _location.placemarkFromCoordinates(position.lat, position.long);
+    if (result.isEmpty) {
+      return null;
+    }
+    final placemark = result.first;
+    return "${placemark.thoroughfare}, ${placemark.locality}";
   }
 }

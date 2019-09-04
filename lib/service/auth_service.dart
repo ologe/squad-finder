@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:inject/inject.dart';
-import 'package:project_london_corner/core/gateways/auth_service.dart';
-import 'package:project_london_corner/core/user.dart';
+import 'package:project_london_corner/core/entity/user.dart';
+import 'package:project_london_corner/core/gateway/auth_service.dart';
 import 'package:rxdart/rxdart.dart';
 
 import '../main.dart';
@@ -14,11 +14,14 @@ class AuthServiceImpl implements AuthService {
   final Firestore _db;
 
   @provide
-  AuthServiceImpl(this._google, this._auth, this._db){
+  AuthServiceImpl(this._google, this._auth, this._db) {
     _auth.onAuthStateChanged.listen(_userPublisher.add);
   }
 
   final _userPublisher = BehaviorSubject<FirebaseUser>();
+
+  @override
+  Observable<FirebaseUser> observeFireBaseUser() => _userPublisher;
 
   @override
   Observable<User> observeUser() => _userPublisher.switchMap((user) {
