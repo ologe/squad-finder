@@ -26,12 +26,19 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Project London Corner',
+      title: 'Squad Finder',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: _theme(),
       home: _splashPage(),
     );
   }
+
+
+  ThemeData _theme(){
+    return ThemeData.light().copyWith(
+      primaryColor: Colors.indigo,
+      accentColor: Colors.indigoAccent
+    );
+  }
+
 }

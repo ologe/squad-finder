@@ -20,7 +20,9 @@ class Group {
   factory Group.fromJson(Map<String, dynamic> json) {
     final members = (json['members'] as List<dynamic>)
         .map((item) => item as Map<dynamic, dynamic>)
-        .map((e) { return e.map((k, v) => MapEntry(k.toString(), v)); })
+        .map((e) {
+          return e.map((k, v) => MapEntry(k.toString(), v));
+        })
         .map((map) => Member.fromJson(map))
         .toList();
 
@@ -36,5 +38,17 @@ class Group {
     return 'Group{uid: $uid, name: $name, adminId: $adminId, members: $members}';
   }
 
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Group &&
+          runtimeType == other.runtimeType &&
+          uid == other.uid &&
+          name == other.name &&
+          adminId == other.adminId &&
+          members == other.members;
 
+  @override
+  int get hashCode =>
+      uid.hashCode ^ name.hashCode ^ adminId.hashCode ^ members.hashCode;
 }

@@ -36,4 +36,30 @@ class User {
         lastPosition: lastPosition,
         photoUrl: json['photoUrl']);
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is User &&
+          runtimeType == other.runtimeType &&
+          uid == other.uid &&
+          email == other.email &&
+          displayName == other.displayName &&
+          photoUrl == other.photoUrl &&
+          allowShareLocation == other.allowShareLocation &&
+          lastPosition == other.lastPosition;
+
+  @override
+  int get hashCode =>
+      uid.hashCode ^
+      email.hashCode ^
+      displayName.hashCode ^
+      photoUrl.hashCode ^
+      allowShareLocation.hashCode ^
+      lastPosition.hashCode;
+
+  @override
+  String toString() {
+    return 'User{uid: $uid, email: $email, displayName: $displayName, photoUrl: $photoUrl, allowShareLocation: $allowShareLocation, lastPosition: $lastPosition}';
+  }
 }
