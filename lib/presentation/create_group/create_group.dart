@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:inject/inject.dart';
 import 'package:project_london_corner/presentation/base/base_widgets.dart';
-import 'package:project_london_corner/presentation/user_state.dart';
 
 import 'create_group_controller.dart';
 
@@ -22,8 +21,8 @@ class _CreateGroupPageState extends AbsState<CreateGroupPage> {
   final _dialogFormKey = GlobalKey<FormState>();
   final members = <String>[];
 
-  final emailRegex = RegExp(
-      r"(\w|\d|\.|!|#|\$|%|&|'|\*|\+|-|\/|=|\?|\^|_|`|{|\||}|~)+@(\w|-)+.(\w){2,}");
+  final emailRegex =
+      RegExp(r"(\w|\d|\.|!|#|\$|%|&|'|\*|\+|-|\/|=|\?|\^|_|`|{|\||}|~)+@(\w|-)+.(\w){2,}");
 
   String _groupName;
   String _email;
@@ -150,22 +149,22 @@ class _CreateGroupPageState extends AbsState<CreateGroupPage> {
             actions: <Widget>[
               FlatButton(
                 child: Text("Cancel"),
-                onPressed: (){
+                onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
-              FlatButton(
-                child: Text("Save"),
-                onPressed: () {
-                  final formState = _dialogFormKey.currentState;
-                  if (formState.validate()) {
-                    formState.save();
-                    widget._controller
-                        .createGroup(_groupName, UserState.of(context).user.uid, members);
-                    Navigator.of(context).pop();
-                  }
-                },
-              )
+//              FlatButton( TODO
+//                child: Text("Save"),
+//                onPressed: () {
+//                  final formState = _dialogFormKey.currentState;
+//                  if (formState.validate()) {
+//                    formState.save();
+//                    widget._controller
+//                        .createGroup(_groupName, UserState.of(context).user.uid, members);
+//                    Navigator.of(context).pop();
+//                  }
+//                },
+//              )
             ],
           );
         });

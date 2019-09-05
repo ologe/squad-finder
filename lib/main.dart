@@ -6,7 +6,9 @@ import 'package:project_london_corner/di/location_module.dart';
 import 'di/app_component.dart';
 import 'di/network_module.dart';
 
-final logger = Logger(printer: PrettyPrinter());
+final logger = Logger(printer: PrettyPrinter(
+  errorMethodCount: 50
+));
 
 void main() async {
   final container = await AppComponent.create(

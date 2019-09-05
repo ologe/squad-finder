@@ -1,41 +1,37 @@
 import 'package:flutter/cupertino.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:project_london_corner/core/entity/position.dart';
+import 'package:json_annotation/json_annotation.dart';
 
+part 'user.g.dart';
+
+@JsonSerializable(explicitToJson: true)
 class User {
+  // ignore: constant_identifier_names
+  static const TABLE = "users";
+
+  // ignore: constant_identifier_names
+  static const UID = "uid";
+
+  // ignore: constant_identifier_names
+  static const EMAIL = "email";
+
   final String uid;
   final String email;
   final String displayName;
   final String photoUrl;
-  final bool allowShareLocation;
-  final CurrentPosition lastPosition;
+  final DateTime lastSeen;
 
-  User(
+  User(this.uid, this.email, this.displayName, this.photoUrl, this.lastSeen);
+
+  User.typed(
       {@required this.uid,
       @required this.email,
-      @required this.allowShareLocation,
       @required this.displayName,
       @required this.photoUrl,
-      @required this.lastPosition});
+      @required this.lastSeen});
 
-  LatLng get position {
-    return LatLng(lastPosition.lat, lastPosition.long);
-  }
+  factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 
-  factory User.fromJson(Map<dynamic, dynamic> json) {
-    final lastPosition = CurrentPosition(
-        lat: json['lastPosition']['lat'],
-        long: json['lastPosition']['long'],
-        accuracy: json['lastPosition']['accuracy']);
-
-    return User(
-        uid: json['uid'] as String,
-        email: json['name'] as String,
-        allowShareLocation: json['allowShareLocation'],
-        displayName: json['displayName'] as String,
-        lastPosition: lastPosition,
-        photoUrl: json['photoUrl']);
-  }
+  Map<String, dynamic> toJson() => _$UserToJson(this);
 
   @override
   bool operator ==(Object other) =>
@@ -46,8 +42,7 @@ class User {
           email == other.email &&
           displayName == other.displayName &&
           photoUrl == other.photoUrl &&
-          allowShareLocation == other.allowShareLocation &&
-          lastPosition == other.lastPosition;
+          lastSeen == other.lastSeen;
 
   @override
   int get hashCode =>
@@ -55,11 +50,10 @@ class User {
       email.hashCode ^
       displayName.hashCode ^
       photoUrl.hashCode ^
-      allowShareLocation.hashCode ^
-      lastPosition.hashCode;
+      lastSeen.hashCode;
 
   @override
   String toString() {
-    return 'User{uid: $uid, email: $email, displayName: $displayName, photoUrl: $photoUrl, allowShareLocation: $allowShareLocation, lastPosition: $lastPosition}';
+    return 'User{uid: $uid, email: $email, displayName: $displayName, photoUrl: $photoUrl, lastSeen: $lastSeen}';
   }
 }

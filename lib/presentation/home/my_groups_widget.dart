@@ -1,38 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:project_london_corner/core/entity/group.dart';
 import 'package:project_london_corner/presentation/base/base_widgets.dart';
-import 'package:project_london_corner/presentation/home/home_controller.dart';
+import 'package:project_london_corner/presentation/home/home_page_controller.dart';
+import 'package:project_london_corner/presentation/model/presentation_entity.dart';
 import 'package:project_london_corner/presentation/widget/custom_stream_builder.dart';
 
-import '../list_item.dart';
+import '../model/list_item.dart';
 
-typedef OnGroupSelected = void Function(Group group);
+typedef OnGroupSelected = void Function(String groupId);
 
 class MyGroups extends AbsStatelessWidget {
   final HomePageController controller;
-  final OnGroupSelected onGroupSelected;
 
-  MyGroups({@required this.controller, @required this.onGroupSelected});
+  MyGroups({@required this.controller});
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = user(context);
-
-    return CustomStreamBuilder<List<Group>>(
-      stream: controller.observeUserGroups(currentUser.uid),
+    return CustomStreamBuilder<List<DisplayableGroup>>(
+      stream: appController(context).observeAllUserGroups,
       builder: (context, originalGroups) {
         if (originalGroups.isEmpty) {
           return Text("No groups found");
         }
-        final pendingGroups = <ListItem>[];
+        final pendingGroups = <ListItem<DisplayableGroup>>[];
 
-        final otherGroups = <ListItem>[];
+        final otherGroups = <ListItem<DisplayableGroup>>[];
 
         for (final group in originalGroups) {
-          if (group.members.any((m) => m.uid == currentUser.uid && m.pending)) {
-            pendingGroups.add(ActualItem<Group>(group));
+          if (!group.approvedByCurrentUser) {
+            pendingGroups.add(ActualItem<DisplayableGroup>(group));
           } else {
-            otherGroups.add(ActualItem<Group>(group));
+            otherGroups.add(ActualItem<DisplayableGroup>(group));
           }
         }
         if (pendingGroups.isNotEmpty) {
@@ -47,13 +44,12 @@ class MyGroups extends AbsStatelessWidget {
         return ListView.builder(
             itemCount: groups.length,
             itemBuilder: (context, index) {
-              if (otherGroups.isNotEmpty &&
-                  index == pendingGroups.length + 1) {}
+              if (otherGroups.isNotEmpty && index == pendingGroups.length + 1) {}
 
               final item = groups[index];
-              if (item is HeadingItem) {
+              if (item is HeadingItem<DisplayableGroup>) {
                 return _buildHeader(context, item);
-              } else if (item is ActualItem<Group>) {
+              } else if (item is ActualItem<DisplayableGroup>) {
                 return _buildTile(context, item.item);
               }
               return Text("Error ${item.runtimeType}");
@@ -67,40 +63,36 @@ class MyGroups extends AbsStatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Text(
         item.title,
-        style: Theme.of(context)
-            .textTheme
-            .headline
-            .copyWith(fontWeight: FontWeight.w800),
+        style: Theme.of(context).textTheme.headline.copyWith(fontWeight: FontWeight.w800),
       ),
     );
   }
 
-  Widget _buildTile(BuildContext context, Group group) {
-    final needApproval = group.members.any((member) {
-      return member.uid == user(context).uid && member.pending;
-    });
+  Widget _buildTile(BuildContext context, DisplayableGroup group) {
+    final needApproval = !group.approvedByCurrentUser;
 
     return ListTile(
       leading: CircleAvatar(
         child: Icon(Icons.group),
       ),
-      title: Text(group.name),
-      subtitle: Text("${group.membersCount} members"),
+//      title: Text(group.name), TODO
+      title: Text("group name placeholder"),
       trailing: needApproval
           ? IconButton(
               onPressed: () => _approveGroup(context, group),
               icon: Icon(Icons.done),
             )
           : null,
-      onTap: () => _toDetail(group),
+      onTap: () => _toDetail(context, group),
     );
   }
 
-  void _approveGroup(BuildContext context, Group group) {
-    controller.approveGroup(user(context).uid, group);
+  void _approveGroup(BuildContext context, DisplayableGroup group) async {
+    final user = await appController(context).observeCurrentUser.first;
+    await controller.approveGroup(user.uid, group.id);
   }
 
-  void _toDetail(Group group) {
-    onGroupSelected(group);
+  void _toDetail(BuildContext context, DisplayableGroup group) {
+    appController(context).updateCurrentGroup(group.toDomain());
   }
 }

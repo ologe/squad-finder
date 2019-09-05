@@ -1,13 +1,13 @@
 import 'package:inject/inject.dart';
-import 'package:project_london_corner/core/gateway/auth_service.dart';
+import 'package:project_london_corner/core/gateway/auth_gateway.dart';
 
 class LoginPageController {
-  final AuthService _authService;
+  final AuthGateway _authService;
 
   @provide
   LoginPageController(this._authService);
 
   void login() {
-    _authService.googleSignIn();
+    _authService.login();
   }
 }

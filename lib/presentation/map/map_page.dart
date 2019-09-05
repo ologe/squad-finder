@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:inject/inject.dart';
-import 'package:project_london_corner/core/entity/group.dart';
 import 'package:project_london_corner/core/entity/user.dart';
+import 'package:project_london_corner/core/entity/user_position.dart';
 import 'package:project_london_corner/main.dart';
 import 'package:project_london_corner/presentation/base/base_widgets.dart';
 import 'package:project_london_corner/presentation/map/map.dart';
 import 'package:project_london_corner/presentation/map/map_page_controller.dart';
-import 'package:rxdart/rxdart.dart';
+import 'package:project_london_corner/presentation/model/presentation_entity.dart';
+import 'package:project_london_corner/presentation/widget/custom_stream_builder.dart';
 
 // ignore: must_be_immutable
 class MapPage extends StatefulWidget {
@@ -14,49 +15,47 @@ class MapPage extends StatefulWidget {
   final MapController _controller;
 
   @provide
-  MapPage(this._controller) : super(key: GlobalKey<MapPageState>());
+  MapPage(this._controller);
 
-  Key inject(double backdropPeek) {
+  MapPage inject(double backdropPeek) {
     this._backdropPeek = backdropPeek;
-    return key;
+    return this;
   }
 
   @override
-  State createState() => MapPageState();
+  State createState() => _MapPageState();
 }
 
-class MapPageState extends AbsState<MapPage> {
+class _MapPageState extends AbsState<MapPage> {
   final _mapKey = GlobalKey<MapWidgetState>();
-  final _groupPublisher = BehaviorSubject<Group>();
 
-  final _members = <User>[];
+  final _members = <DisplayableUser>[];
+
+  _MapPageState();
 
   @override
-  void initState() {
-    super.initState();
-    final memberPositionDisposable = _groupPublisher
-        .delay(Duration(seconds: 1))
-        .switchMap((group) => widget._controller.observeMemberPosition(group))
-        .listen((members) {
-      _mapKey.currentState.buildCurrentPosition(members);
+  void afterInit() {
+    super.afterInit();
+    _initializeAsync();
+  }
+
+  void _initializeAsync() async {
+    final user = await appController.observeCurrentUser.first;
+    final memberPositionDisposable =
+        appController.observeCurrentGroupUsers.listen((memberPosition) {
+      _mapKey.currentState.buildCurrentPosition(user, memberPosition);
       setState(() {
         _members.clear();
-        _members.addAll(members.where((u) => u.uid != user.uid));
+        _members.addAll(memberPosition.where((u) => u.uid != user.uid));
       });
     });
 
-    final myPositionDisposable = Observable.timer(1, Duration(seconds: 2))
-        .switchMap((_) => widget._controller.observeCurrentPosition())
-        .switchMap((position) =>
-            widget._controller.updateUserPosition(user.uid, position))
-        .listen((_) {});
+    final myPositionDisposable = appController.observeCurrentUserPosition.listen((position) {
+      widget._controller.updateUserPosition(user.uid, position);
+    });
 
     subscriptions.add(memberPositionDisposable);
     subscriptions.add(myPositionDisposable);
-  }
-
-  void updateGroup(Group group) {
-    _groupPublisher.add(group);
   }
 
   @override
@@ -88,8 +87,7 @@ class MapPageState extends AbsState<MapPage> {
                       Icons.my_location,
                       color: Theme.of(context).accentColor,
                     ),
-                    onPressed: () =>
-                        _mapKey.currentState..moveToCurrentPosition,
+                    onPressed: () => _mapKey.currentState..moveToCurrentPosition,
                   ),
                 )
               ],
@@ -101,20 +99,23 @@ class MapPageState extends AbsState<MapPage> {
   }
 
   Widget _buildUsers() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          itemCount: _members.length,
-          itemBuilder: (context, index) {
-            final item = _members[index];
-            return _buildUser(item);
-          }),
-    );
+    return CustomStreamBuilder<List<DisplayableUser>>(
+        stream: appController.observeCurrentGroupUsers,
+        builder: (context, users) {
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: users.length,
+                itemBuilder: (context, index) {
+                  final item = users[index];
+                  return _buildUser(item);
+                }),
+          );
+        });
   }
 
-  Widget _buildUser(User user) {
-    print(user);
+  Widget _buildUser(DisplayableUser user) {
     return SizedBox(
       width: 200,
       child: Card(

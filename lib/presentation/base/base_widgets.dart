@@ -1,15 +1,29 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:project_london_corner/presentation/app_controller.dart';
 
-import '../user_state.dart';
-
+// main
 abstract class AbsState<T extends StatefulWidget> extends State<T> {
+  @protected
+  AppControllerInternal get appController => AppController.of(context);
+
   List<StreamSubscription> subscriptions = [];
 
+  bool _hasInit = false;
+
+  @override
+  @mustCallSuper
+  void didUpdateWidget(T oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_hasInit) {
+      afterInit();
+      _hasInit = true;
+    }
+  }
+
   @protected
-  FirebaseUser get user => UserState.of(context).user;
+  void afterInit() {}
 
   @override
   void dispose() {
@@ -22,5 +36,5 @@ abstract class AbsState<T extends StatefulWidget> extends State<T> {
 
 abstract class AbsStatelessWidget extends StatelessWidget {
   @protected
-  FirebaseUser user(BuildContext context) => UserState.of(context).user;
+  AppControllerInternal appController(BuildContext context) => AppController.of(context);
 }

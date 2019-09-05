@@ -1,44 +1,30 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:inject/inject.dart';
 import 'package:project_london_corner/core/entity/user.dart';
-import 'package:project_london_corner/core/gateway/auth_service.dart';
+import 'package:project_london_corner/core/gateway/auth_gateway.dart';
+import 'package:project_london_corner/core/gateway/user_gateway.dart';
 import 'package:rxdart/rxdart.dart';
 
 import '../main.dart';
 
-class AuthServiceImpl implements AuthService {
+class AuthServiceImpl implements AuthGateway {
   final GoogleSignIn _google;
   final FirebaseAuth _auth;
-  final Firestore _db;
-
-  @provide
-  AuthServiceImpl(this._google, this._auth, this._db) {
-    _auth.onAuthStateChanged.listen(_userPublisher.add);
-  }
+  final UserGateway _userGateway;
 
   final _userPublisher = BehaviorSubject<FirebaseUser>();
+
+  @provide
+  AuthServiceImpl(this._google, this._auth, this._userGateway) {
+    _auth.onAuthStateChanged.listen(_userPublisher.add);
+  }
 
   @override
   Observable<FirebaseUser> observeFireBaseUser() => _userPublisher;
 
   @override
-  Observable<User> observeUser() => _userPublisher.switchMap((user) {
-        if (user == null) {
-          return Observable.just(null);
-        }
-        return _db
-            .collection("users")
-            .document(user.uid)
-            .snapshots()
-            .map((snapshot) => User.fromJson(snapshot.data));
-      });
-
-  Observable<Map<String, dynamic>> profile;
-
-  @override
-  Future<void> googleSignIn() async {
+  Future<void> login() async {
     try {
       final googleUser = await _google.signIn();
       final googleAuth = await googleUser.authentication;
@@ -47,24 +33,24 @@ class AuthServiceImpl implements AuthService {
           idToken: googleAuth.idToken, accessToken: googleAuth.accessToken);
 
       final authResult = await _auth.signInWithCredential(credential);
-      _updateUser(authResult.user);
+      await _updateUser(authResult.user);
     } catch (e) {
       logger.w(e);
     }
   }
 
-  void _updateUser(FirebaseUser user) async {
-    final ref = _db.collection("users").document(user.uid);
-    await ref.setData({
-      "uid": user.uid,
-      "email": user.email,
-      "photoURL": user.photoUrl,
-      "lastSeen": DateTime.now()
-    }, merge: true);
+  Future<void> _updateUser(FirebaseUser fireBaseUser) async {
+    final user = User.typed(
+        uid: fireBaseUser.uid,
+        email: fireBaseUser.email,
+        displayName: fireBaseUser.displayName,
+        photoUrl: fireBaseUser.photoUrl,
+        lastSeen: DateTime.now());
+    return await _userGateway.updateUser(user: user);
   }
 
   @override
-  Future<void> logOut() async {
+  Future<void> logout() async {
     await _auth.signOut();
   }
 }

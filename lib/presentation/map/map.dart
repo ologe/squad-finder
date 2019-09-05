@@ -4,6 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:project_london_corner/core/entity/user.dart';
 import 'package:project_london_corner/presentation/base/base_widgets.dart';
 import 'package:project_london_corner/presentation/map/map_page_controller.dart';
+import 'package:project_london_corner/presentation/model/presentation_entity.dart';
 
 class MapWidget extends StatefulWidget {
   final MapController controller;
@@ -44,18 +45,16 @@ class MapWidgetState extends AbsState<MapWidget> {
     await controller.setMapStyle(style);
   }
 
-  void moveToCurrentPosition() {
-    widget.controller.observeCurrentPosition().take(1).listen((position) {
+  void moveToCurrentPosition() async {
+    appController.observeCurrentUserPosition.take(1).listen((position) {
       _mapController.animateCamera(
-          CameraUpdate.newLatLngZoom(LatLng(position.lat, position.long), 15));
+          CameraUpdate.newLatLngZoom(LatLng(position.latitude, position.longitude), 15));
     });
   }
 
-  void buildCurrentPosition(List<User> users) async {
+  void buildCurrentPosition(User me, List<DisplayableUser> users) async {
     final markers = <Marker>[];
     final circles = <Circle>[];
-
-    final me = user;
 
     for (final user in users) {
       if (user.uid == me.uid) {
@@ -63,7 +62,7 @@ class MapWidgetState extends AbsState<MapWidget> {
       }
 
       if (user.allowShareLocation) {
-        markers.add(await _newMarker(me, user));
+        markers.add(await _newMarker(user));
         circles.add(await _newCircle(user));
       }
     }
@@ -73,25 +72,19 @@ class MapWidgetState extends AbsState<MapWidget> {
     });
   }
 
-  Future<Marker> _newMarker(User me, User other) async {
-    final distance = (await widget.controller
-            .distanceBetweenLatLng(me.position, other.position))
-        .toInt();
-    final accuracy = other.lastPosition.accuracy.toInt();
+  Future<Marker> _newMarker(DisplayableUser other) async {
     return Marker(
       markerId: MarkerId(other.uid),
-      position: other.position,
-      infoWindow: InfoWindow(
-          title: other.displayName, snippet: "$distance±${accuracy}m"),
+      position: other.latLng,
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
     );
   }
 
-  Future<Circle> _newCircle(User user) async {
+  Future<Circle> _newCircle(DisplayableUser user) async {
     return Circle(
         circleId: CircleId(user.uid),
-        center: user.position,
-        radius: user.lastPosition.accuracy,
+        center: user.latLng,
+        radius: user.accuracy,
         fillColor: Colors.indigoAccent.withAlpha(40),
         strokeWidth: 2,
         strokeColor: Colors.indigoAccent);

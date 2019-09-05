@@ -1,39 +1,31 @@
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:inject/inject.dart';
-import 'package:project_london_corner/core/entity/group.dart';
 import 'package:project_london_corner/core/entity/position.dart';
-import 'package:project_london_corner/core/entity/user.dart';
-import 'package:project_london_corner/core/gateway/group_service.dart';
-import 'package:project_london_corner/core/gateway/location_service.dart';
+import 'package:project_london_corner/core/entity/user_position.dart';
+import 'package:project_london_corner/core/gateway/location_gateway.dart';
+import 'package:project_london_corner/core/gateway/user_position_gateway.dart';
+import 'package:project_london_corner/presentation/model/presentation_entity.dart';
 import 'package:rxdart/rxdart.dart';
 
 class MapController {
-  final GroupsService _groupsService;
-  final LocationService _locationService;
+  final LocationGateway _locationService;
+  final UserPositionGateway _userPositionGateway;
 
   @provide
-  MapController(this._groupsService, this._locationService);
-
-  Observable<CurrentPosition> observeCurrentPosition() {
-    return _locationService.observeLocation();
-  }
-
-  Observable<List<User>> observeMemberPosition(Group group) {
-    if (group == null) {
-      return Observable.just([]);
-    }
-    return _groupsService.observeMemberPosition(group);
-  }
+  MapController(this._locationService, this._userPositionGateway);
 
   Future<double> distanceBetweenLatLng(LatLng from, LatLng to) {
-    return _locationService.distanceBetween(from, to);
+    return _locationService.distanceBetween(from: from, to: to);
   }
 
-  Observable<void> updateUserPosition(String userId, CurrentPosition position) {
-    return _locationService.updateUserPosition(userId, position);
+  Observable<void> updateUserPosition(String uid, CurrentPosition position) {
+    return Observable.fromFuture(
+        _userPositionGateway.updateUserPosition(uid: uid, position: position));
   }
 
-  Future<String> getUserAddress(User user) async {
-    return await _locationService.getUserAddress(user);
+  Future<String> getUserAddress(DisplayableUser user) {
+    final position = UserPosition(
+        user.uid, user.latitude, user.longitude, user.accuracy, user.allowShareLocation);
+    return _locationService.getUserAddress(position: position);
   }
 }

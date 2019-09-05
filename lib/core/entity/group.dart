@@ -1,55 +1,43 @@
 import 'package:flutter/cupertino.dart';
+import 'package:json_annotation/json_annotation.dart';
 
-import 'member.dart';
+part 'group.g.dart';
 
+@JsonSerializable(explicitToJson: true)
 class Group {
-  final String uid;
+  // ignore: constant_identifier_names
+  static const String TABLE = "groups";
+
+  // ignore: constant_identifier_names
+  static const String ID = "id";
+
+  final String id;
   final String name;
   final String adminId;
-  final List<Member> members;
 
-  Group(
-      {@required this.uid,
-      @required this.name,
-      @required this.adminId,
-      @required this.members});
+  Group(this.id, this.name, this.adminId);
 
-  int get membersCount {
-    return members.length;
-  }
+  Group.typed(
+      {@required this.id, @required this.name, @required this.adminId});
 
-  factory Group.fromJson(Map<String, dynamic> json) {
-    final members = (json['members'] as List<dynamic>)
-        .map((item) => item as Map<dynamic, dynamic>)
-        .map((e) {
-          return e.map((k, v) => MapEntry(k.toString(), v));
-        })
-        .map((map) => Member.fromJson(map))
-        .toList();
+  factory Group.fromJson(Map<String, dynamic> json) => _$GroupFromJson(json);
 
-    return Group(
-        uid: json['uid'] as String,
-        name: json['name'] as String,
-        adminId: json['adminId'] as String,
-        members: members);
-  }
-
-  @override
-  String toString() {
-    return 'Group{uid: $uid, name: $name, adminId: $adminId, members: $members}';
-  }
+  Map<String, dynamic> toJson() => _$GroupToJson(this);
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is Group &&
           runtimeType == other.runtimeType &&
-          uid == other.uid &&
+          id == other.id &&
           name == other.name &&
-          adminId == other.adminId &&
-          members == other.members;
+          adminId == other.adminId;
 
   @override
-  int get hashCode =>
-      uid.hashCode ^ name.hashCode ^ adminId.hashCode ^ members.hashCode;
+  int get hashCode => id.hashCode ^ name.hashCode ^ adminId.hashCode;
+
+  @override
+  String toString() {
+    return 'Group{id: $id, name: $name, adminId: $adminId}';
+  }
 }

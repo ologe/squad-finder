@@ -1,27 +1,26 @@
 import 'package:flutter/cupertino.dart';
 
 class CurrentPosition {
-  final double lat;
-  final double long;
+  final double latitude;
+  final double longitude;
   final double accuracy;
 
-  CurrentPosition(
-      {@required this.lat, @required this.long, @required this.accuracy});
+  CurrentPosition({@required this.latitude, @required this.longitude, @required this.accuracy});
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is CurrentPosition &&
           runtimeType == other.runtimeType &&
-          lat == other.lat &&
-          long == other.long &&
+          latitude == other.latitude &&
+          longitude == other.longitude &&
           accuracy == other.accuracy;
 
   @override
-  int get hashCode => lat.hashCode ^ long.hashCode ^ accuracy.hashCode;
+  int get hashCode => latitude.hashCode ^ longitude.hashCode ^ accuracy.hashCode;
 
   @override
   String toString() {
-    return 'CurrentPosition{lat: $lat, long: $long, accuracy: $accuracy}';
+    return 'Position{latitude: $latitude, longitude: $longitude, accuracy: $accuracy}';
   }
 }

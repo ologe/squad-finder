@@ -28,6 +28,9 @@ dependencies:
   google_sign_in: ^4.0.7
   cloud_firestore: ^0.12.9+2
 
+  json_annotation: ^2.0.0
+
+
   cupertino_icons: ^0.1.2
 
 dev_dependencies:
@@ -35,6 +38,8 @@ dev_dependencies:
     sdk: flutter
 
   pedantic: ^1.0.0
+
+  json_serializable: ^2.0.0
 
 #  di
   build_runner: ^1.0.0

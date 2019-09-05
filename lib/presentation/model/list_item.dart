@@ -1,6 +1,6 @@
 abstract class ListItem<T> {}
 
-class HeadingItem extends ListItem {
+class HeadingItem<T> extends ListItem<T> {
   final String title;
 
   HeadingItem(this.title);
